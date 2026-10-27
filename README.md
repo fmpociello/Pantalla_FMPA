@@ -1,4 +1,4 @@
-# CuentasPQ · web (v6)
+# Pantalla - FMPA · web (v7)
 
 Sitio estático: no necesita instalar nada ni compilar. Lee todo de Supabase con la clave pública (solo lectura).
 

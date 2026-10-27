@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CuentasPQ | Terminal de mercado</title>
+<title>Pantalla - FMPA</title>
 <link rel="stylesheet" href="css/style.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
 <header><div class="head">
-  <div class="brand"><div class="logo">PQ</div><div><h1>CuentasPQ <span class="tag">TERMINAL</span></h1><p>Monitor de arbitrajes · Renta fija · Equity</p></div></div>
+  <div class="brand"><div class="logo">FM</div><div><h1>Pantalla - FMPA</h1><p>Monitor de arbitrajes · Renta fija · Equity</p></div></div>
   <div class="head-actions">
     <div class="status"><span class="dot" id="statusDot"></span><span id="statusText">Conectando…</span></div>
     <label class="commission-control"><span class="small muted">Comisión por lado %</span>
@@ -38,7 +38,7 @@
     <div class="card"><div class="metric-label">Canje cable → MEP</div><div class="metric-value yellow" id="canjeCD">—</div><div class="metric-foot">AL30D / AL30C − 1</div></div>
   </div>
 
-  <div class="section-title"><h3 id="histTitle">Evolución</h3><small>MEP, CCL y canje calculados por CuentasPQ, sin comisión</small></div>
+  <div class="section-title"><h3 id="histTitle">Evolución</h3><small>MEP, CCL y canje calculados con AL30, sin comisión</small></div>
   <div class="period" id="periodBar">
     <button type="button" data-p="hoy" class="on">Hoy</button><button type="button" data-p="1M">1 mes</button><button type="button" data-p="6M">6 meses</button><button type="button" data-p="1A">1 año</button><button type="button" data-p="5A">5 años</button>
   </div>
@@ -74,14 +74,23 @@
 
   <div class="section-title"><h3>LECAPs y BONCAPs</h3><small>Rendimiento = finish / precio − 1 · TNA = rendimiento × 360 / días · TEM = TNA × 30 / 365</small></div>
   <div class="table-card"><div class="table-scroll"><table id="tblFixed"></table></div></div>
-  <div class="section-title"><h3>Curva de tasa fija</h3><small>Días al vencimiento vs. TNA</small></div>
+  <div class="section-title"><h3>Curva de tasa fija</h3><small>Días al vencimiento vs. TNA · tendencia logarítmica</small></div>
   <div class="card chart-card"><canvas id="fixedChart"></canvas><div id="fixedChartEmpty" class="empty hide">Todavía no hay suficientes cotizaciones válidas para graficar.</div></div>
+  <div class="legend-note" id="fixedFit"></div>
 
-  <div class="section-title"><h3>LECERs y bonos CER</h3><small>Precio y variación en vivo</small></div>
+  <div class="section-title"><h3>LECERs y bonos CER</h3><small id="cerInfo">—</small></div>
   <div class="table-card"><div class="table-scroll"><table id="tblCer"></table></div></div>
-  <div class="section-title"><h3>Duales</h3><small>Precio y variación en vivo</small></div>
+  <div class="section-title"><h3>Curva CER</h3><small>Duration vs. TIR real · tendencia logarítmica</small></div>
+  <div class="card chart-card"><canvas id="cerChart"></canvas><div id="cerChartEmpty" class="empty hide">Todavía no hay suficientes datos para graficar la curva CER.</div></div>
+  <div class="legend-note" id="cerFit"></div>
+
+  <div class="section-title"><h3>Duales</h3><small>Valuados a CER</small></div>
   <div class="table-card"><div class="table-scroll"><table id="tblDual"></table></div></div>
-  <div class="note"><strong>Próximamente:</strong> TIR, TNA y duration de los instrumentos CER y duales. Se calculan con la tira CER del BCRA y la inflación proyectada del REM, y todavía no están integradas. Preferimos no mostrar una TIR inventada. Los TX no tienen TIR por ahora.</div>
+  <div class="section-title"><h3>Curva de duales</h3><small>Duration vs. TIR real · tendencia logarítmica</small></div>
+  <div class="card chart-card"><canvas id="dualChart"></canvas><div id="dualChartEmpty" class="empty hide">Todavía no hay suficientes datos para graficar la curva de duales.</div></div>
+  <div class="legend-note" id="dualFit"></div>
+
+  <div class="note"><strong>Cómo se calcula (CER y duales).</strong> <strong>Finish (CER hoy)</strong> = CER de 10 días hábiles antes de la liquidación ÷ CER de emisión, por 100 nominales. <strong>TIR real</strong> = (finish ÷ precio)<sup>365/días</sup> − 1, es decir, el rendimiento por encima de la inflación ya devengada (igual que el XIRR de la hoja de Excel). <strong>TNA proy.</strong> usa un finish proyectado: CER de 10 días hábiles antes del vencimiento, estimado con la inflación mensual del REM, y se calcula como las LECAP (rendimiento × 360 / días) para poder compararlas. Con <strong>*</strong> se marcan los casos en que la proyección usó inflación extrapolada (se repite el último mes cargado). <strong>Duration</strong> = años al vencimiento ÷ (1 + TIR real). Los TX no tienen TIR por ahora.</div>
   <div class="disclaimer"></div>
 </section>
 

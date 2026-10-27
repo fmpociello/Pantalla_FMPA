@@ -1,5 +1,5 @@
 // =====================================================================
-// CuentasPQ · pantalla. Lee todo de Supabase (solo lectura) y dibuja las 4 pestañas.
+// Pantalla - FMPA · pantalla. Lee todo de Supabase (solo lectura) y dibuja las 4 pestañas.
 // =====================================================================
 (function () {
   'use strict';
@@ -13,7 +13,7 @@
   var S = {
     quotes: new Map(), inst: [], instBy: new Map(), hol: new Set(), official: [],
     comm: 0, period: 'hoy', sort: {}, charts: {}, hist: {}, hcur: null,
-    staticAt: 0, busy: false, errors: []
+    staticAt: 0, busy: false, errors: [], cerSeries: [], infl: [], cer: null
   };
 
   // ---------- comisión (se recuerda en este navegador; por defecto 0 %) ----------
@@ -88,6 +88,41 @@
         responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: 'index', intersect: false },
         plugins: { legend: { display: datasets.length > 1, labels: { color: '#cbd5e1' } }, tooltip: { callbacks: { label: function (c) { return c.dataset.label + ': ' + tip(c.raw); } } } },
         scales: { x: { ticks: { color: '#94a3b8', maxTicksLimit: 7 }, grid: { display: false } }, y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,.08)' } } }
+      }
+    });
+  }
+
+  // Puntos por instrumento + curva de tendencia logarítmica (y = a + b·ln x), como la línea de tendencia de Excel
+  function scatterChart(id, pts, xLabel, yLabel, fitId) {
+    var cv = $(id), empty = $(id.replace('Chart', 'ChartEmpty')), info = $(fitId);
+    if (!cv || !empty) return;
+    if (!window.Chart) { cv.classList.add('hide'); empty.textContent = 'No se pudo cargar la librería de gráficos.'; empty.classList.remove('hide'); return; }
+    if (pts.length < 2) {
+      if (S.charts[id]) { S.charts[id].destroy(); delete S.charts[id]; }
+      cv.classList.add('hide'); empty.classList.remove('hide'); if (info) info.textContent = ''; return;
+    }
+    cv.classList.remove('hide'); empty.classList.add('hide');
+    var fit = C.logFit(pts), line = fit ? C.trendLine(fit, 40) : [];
+    var fitLabel = fit ? 'Tendencia logarítmica (R² ' + C.fmt(fit.r2, 2) + ')' : 'Tendencia (hacen falta 3 o más puntos)';
+    if (info) info.textContent = fit ? 'y = ' + C.fmt(fit.a, 3) + (fit.b < 0 ? ' − ' : ' + ') + C.fmt(Math.abs(fit.b), 3) + ' · ln(x)   ·   R² = ' + C.fmt(fit.r2, 3) + '   ·   ' + fit.n + ' puntos' : '';
+    var ch = S.charts[id];
+    if (ch) { ch.data.datasets[0].data = pts; ch.data.datasets[1].data = line; ch.data.datasets[1].label = fitLabel; ch.update('none'); return; }
+    S.charts[id] = new window.Chart(cv, {
+      type: 'scatter',
+      data: { datasets: [
+        { label: 'Instrumentos', data: pts, showLine: false, pointRadius: 5, pointHoverRadius: 7, pointBackgroundColor: '#fbbf24', borderColor: '#fbbf24' },
+        { label: fitLabel, data: line, showLine: true, pointRadius: 0, borderColor: '#60a5fa', borderWidth: 2, fill: false, tension: 0 }
+      ] },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: false,
+        plugins: {
+          legend: { labels: { color: '#cbd5e1' } },
+          tooltip: { callbacks: { label: function (c) { var r = c.raw; return c.datasetIndex === 0 ? r.t + ': ' + C.fmt(r.y) + '% · ' + C.fmt(r.x, 2) : 'Tendencia: ' + C.fmt(r.y) + '%'; } } }
+        },
+        scales: {
+          x: { type: 'linear', title: { display: true, text: xLabel, color: '#94a3b8' }, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,.08)' } },
+          y: { title: { display: true, text: yLabel, color: '#94a3b8' }, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,.08)' } }
+        }
       }
     });
   }
@@ -205,27 +240,43 @@
       { k: 'vol', label: 'Volumen', first: -1, html: function (r) { return C.fmt(r.q.vol, 0); }, val: function (r) { return r.q.vol; } }
     ], fixed, byVenc);
 
-    var curve = fixed.filter(function (r) { return r.tf.tna !== null; }).sort(function (a, b) { return a.days - b.days; });
-    lineChart('fixedChart', curve.map(function (r) { return r.days + ' d'; }), [ds('TNA (%)', curve.map(function (r) { return r.tf.tna * 100; }), '#fbbf24', true, 3)], function (v) { return C.fmt(v) + '%'; });
+    var curve = fixed.filter(function (r) { return r.tf.tna !== null; }).map(function (r) { return { x: r.days, y: r.tf.tna * 100, t: r.tk }; });
+    scatterChart('fixedChart', curve, 'Días al vencimiento', 'TNA (%)', 'fixedFit');
 
+    var cer = S.cer;
+    var last = cer ? cer.lastOfficial : null;
+    var info = $('cerInfo');
+    if (info) {
+      info.textContent = !last ? 'Sin CER oficial cargado todavía' : 'CER oficial hasta ' + C.dateEs(last) + ' · después, proyección con el REM';
+      info.className = last && C.daysBetween(last, today) <= 45 ? '' : 'yellow';
+    }
     function cerRows(tipos) {
       return S.inst.filter(function (i) { return tipos.indexOf(i.tipo) >= 0 && (!i.vencimiento || i.vencimiento >= today); }).map(function (i) {
-        return { orden: i.orden, tk: i.ticker, venc: i.vencimiento, days: i.vencimiento ? C.daysBetween(settle, i.vencimiento) : null, q: qv(C.symbolsFor(i).p), nota: i.nota };
+        var q = qv(C.symbolsFor(i).p);
+        var o = cer && i.vencimiento && i.tipo !== 'tx' ? C.cerBond(cer, q.last, i.cer_emision, settle, i.vencimiento, S.hol, S.comm, 10) : null;
+        return { orden: i.orden, tk: i.ticker, venc: i.vencimiento, days: i.vencimiento ? C.daysBetween(settle, i.vencimiento) : null, q: q, nota: i.nota, o: o };
       });
     }
+    var g = function (r, k) { return r.o ? r.o[k] : null; };
+    var dash = '<span class="muted">—</span>';
     var cerCols = [
       { k: 'tk', label: 'Ticker', html: function (r) { return tk(r) + (r.nota ? '<div class="small muted">' + esc(r.nota) + '</div>' : ''); }, val: function (r) { return r.tk; } },
       { k: 'l', label: 'Último', first: -1, html: function (r) { return blue(C.fmt(r.q.last, 3)); }, val: function (r) { return r.q.last; } },
       { k: 'v', label: 'Var. %', first: -1, html: function (r) { return vr(r.q.pct); }, val: function (r) { return r.q.pct; } },
       { k: 'venc', label: 'Vencimiento', html: function (r) { return C.dateEs(r.venc); }, val: function (r) { return r.venc; } },
       { k: 'days', label: 'Días', html: function (r) { return r.days === null ? '—' : String(r.days); }, val: function (r) { return r.days; } },
-      { k: 'tir', label: 'TIR', html: function () { return '<span class="muted">—</span>'; }, val: function () { return null; } },
-      { k: 'tna', label: 'TNA', html: function () { return '<span class="muted">—</span>'; }, val: function () { return null; } },
-      { k: 'dur', label: 'Duration', html: function () { return '<span class="muted">—</span>'; }, val: function () { return null; } },
+      { k: 'fin', label: 'Finish (CER hoy)', first: -1, html: function (r) { return g(r, 'finishReal') === null ? dash : C.fmt(g(r, 'finishReal'), 4); }, val: function (r) { return g(r, 'finishReal'); } },
+      { k: 'tir', label: 'TIR real', first: -1, html: function (r) { return g(r, 'tir') === null ? dash : yellow(C.pctFrac(g(r, 'tir'))); }, val: function (r) { return g(r, 'tir'); } },
+      { k: 'tna', label: 'TNA proy.', first: -1, html: function (r) { return g(r, 'tnaProj') === null ? dash : yellow(C.pctFrac(g(r, 'tnaProj')) + (g(r, 'extrap') ? '*' : '')); }, val: function (r) { return g(r, 'tnaProj'); } },
+      { k: 'dur', label: 'Duration', first: -1, html: function (r) { return g(r, 'dur') === null ? dash : C.fmt(g(r, 'dur'), 2); }, val: function (r) { return g(r, 'dur'); } },
       { k: 'vol', label: 'Volumen', first: -1, html: function (r) { return C.fmt(r.q.vol, 0); }, val: function (r) { return r.q.vol; } }
     ];
-    drawTable('tblCer', cerCols, cerRows(['cer', 'tx']), byVenc);
-    drawTable('tblDual', cerCols, cerRows(['dual']), byVenc);
+    var cerR = cerRows(['cer', 'tx']), dualR = cerRows(['dual']);
+    drawTable('tblCer', cerCols, cerR, byVenc);
+    drawTable('tblDual', cerCols, dualR, byVenc);
+    var pts = function (rows) { return rows.filter(function (r) { return g(r, 'tir') !== null && g(r, 'dur') > 0; }).map(function (r) { return { x: g(r, 'dur'), y: g(r, 'tir') * 100, t: r.tk }; }); };
+    scatterChart('cerChart', pts(cerR), 'Duration (años)', 'TIR real (%)', 'cerFit');
+    scatterChart('dualChart', pts(dualR), 'Duration (años)', 'TIR real (%)', 'dualFit');
   }
 
   // ---------- pestaña: equity ----------
@@ -284,10 +335,13 @@
   async function loadStatic() {
     var r = await Promise.all([
       API.get('instruments', { select: '*', activo: 'eq.true', order: 'orden.asc' }),
-      API.getAll('holidays', { select: 'fecha' })
+      API.getAll('holidays', { select: 'fecha' }),
+      API.get('cer_series', { select: 'fecha,valor', tipo: 'eq.oficial', order: 'fecha.desc', limit: '200' }),
+      API.getAll('inflation_projection', { select: 'mes,ipc_mensual,fuente', order: 'mes.asc' })
     ]);
     S.inst = r[0]; S.instBy = new Map(S.inst.map(function (i) { return [String(i.ticker).toUpperCase(), i]; }));
     S.hol = new Set(r[1].map(function (h) { return h.fecha; }));
+    S.cerSeries = r[2]; S.infl = r[3]; S.cer = C.buildCER(S.cerSeries, S.infl);
     S.staticAt = Date.now();
   }
 
