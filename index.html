@@ -45,7 +45,7 @@
   <div class="fx-charts three">
     <div class="card fx-chart"><h3>MEP</h3><canvas id="mepChart"></canvas><div id="mepChartEmpty" class="empty small hide">Todavía no hay datos para este período.</div></div>
     <div class="card fx-chart"><h3>CCL</h3><canvas id="cclChart"></canvas><div id="cclChartEmpty" class="empty small hide">Todavía no hay datos para este período.</div></div>
-    <div class="card fx-chart"><h3>Canje (%)</h3><canvas id="canjeChart"></canvas><div id="canjeChartEmpty" class="empty small hide">Todavía no hay datos para este período.</div></div>
+    <div class="card fx-chart"><h3>Canje cable → MEP (%)</h3><canvas id="canjeChart"></canvas><div id="canjeChartEmpty" class="empty small hide">Todavía no hay datos para este período.</div></div>
   </div>
   <div class="section-title"><h3>Dólar oficial y brecha</h3><small>Fuente BCRA · última fecha publicada</small></div>
   <div class="grid metrics" style="grid-template-columns:repeat(3,minmax(0,1fr))">
@@ -112,7 +112,7 @@
   <div class="method-body">
     <p><strong>Datos.</strong> Precios de último operado por 100 nominales (data912), actualizados cada minuto en horario de mercado (10:30 a 17:00, días hábiles). Fuera de ese horario se muestra el último dato disponible. La referencia oficial es la Com. A 3500 del BCRA.</p>
     <p><strong>Dólares.</strong> MEP = AL30 / AL30D. CCL = AL30 / AL30C. Canje MEP → cable = AL30C / AL30D − 1 (comprar en MEP y vender en cable). Canje cable → MEP = AL30D / AL30C − 1. Con comisión, se compra con +comisión y se vende con −comisión sobre cada precio. Brecha = MEP (o CCL) / A3500 − 1, sin comisión. Los gráficos tampoco incluyen comisión.</p>
-    <p><strong>Historial.</strong> Se guarda una observación por minuto en horario de mercado y, pasado un año, una por día. Los datos diarios anteriores a octubre de 2026 se reconstruyeron con los cierres diarios de AL30, AL30D y AL30C.</p>
+    <p><strong>Historial.</strong> El gráfico de canje muestra el canje cable → MEP (el MEP → cable es su inversa). Se guarda una observación por minuto en horario de mercado y, pasado un año, una por día. Los datos diarios anteriores a octubre de 2026 se reconstruyeron con los cierres diarios de AL30, AL30D y AL30C.</p>
     <p><strong>Soberanos.</strong> MEP / CCL implícito = precio en pesos ÷ precio en dólares de la especie. Canje salir = AL30C / AL30D − 1 calculado con cada bono. Ratio de ley = precio MEP del bono de ley local ÷ precio MEP de su par de ley extranjera (por ejemplo AL30D / GD30D).</p>
     <p><strong>LECAP y BONCAP.</strong> Rendimiento = finish ÷ precio − 1. TNA = rendimiento × 360 ÷ días. TEM = TNA × 30 ÷ 365. Los días se cuentan desde la liquidación T+1 hábil. El finish es lo que paga el título al vencimiento por 100 nominales.</p>
     <p><strong>CER y duales.</strong> Finish (CER hoy) = CER de 10 días hábiles antes de la liquidación ÷ CER de emisión, por 100 nominales. TIR real = (finish ÷ precio)<sup>365/días</sup> − 1. Duration = años al vencimiento ÷ (1 + TIR real). TNA proyectada: usa un finish con el CER de 10 días hábiles antes del vencimiento, estimado con la inflación mensual del REM, y se calcula como las LECAP. El asterisco (*) indica que usó inflación extrapolada.</p>

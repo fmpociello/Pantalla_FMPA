@@ -165,7 +165,7 @@
     var pts = h.kind === 'intra' ? 1.5 : 0;
     lineChart('mepChart', h.labels, [ds('MEP', h.mep, '#60a5fa', true, pts)], function (v) { return C.money(v); });
     lineChart('cclChart', h.labels, [ds('CCL', h.ccl, '#fbbf24', true, pts)], function (v) { return C.money(v); });
-    lineChart('canjeChart', h.labels, [ds('MEP → cable', h.c1, '#10b981', false, pts), ds('cable → MEP', h.c2, '#a78bfa', false, pts)], function (v) { return C.fmt(v) + '%'; });
+    lineChart('canjeChart', h.labels, [ds('Canje cable → MEP', h.c2, '#10b981', true, pts)], function (v) { return C.fmt(v) + '%'; });
   }
 
   // ---------- pestaña: dólares ----------
