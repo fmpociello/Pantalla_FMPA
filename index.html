@@ -34,8 +34,8 @@
   <div class="grid metrics">
     <div class="card"><div class="metric-label">Dólar MEP · AL30 / AL30D</div><div class="metric-value" id="mepValue">—</div><div class="metric-foot">Compra con comisión (con comisión 0% es el valor puro)</div></div>
     <div class="card"><div class="metric-label">Dólar cable · AL30 / AL30C</div><div class="metric-value" id="cclValue">—</div><div class="metric-foot">Compra con comisión (con comisión 0% es el valor puro)</div></div>
-    <div class="card"><div class="metric-label">Canje MEP → cable</div><div class="metric-value yellow" id="canjeDC">—</div><div class="metric-foot">1 − AL30C / AL30D</div></div>
-    <div class="card"><div class="metric-label">Canje cable → MEP</div><div class="metric-value yellow" id="canjeCD">—</div><div class="metric-foot">AL30D / AL30C − 1</div></div>
+    <div class="card"><div class="metric-label">Canje MEP → cable</div><div class="metric-value yellow" id="canjeDC">—</div><div class="metric-foot">AL30C / AL30D − 1 · resultado de la operación</div></div>
+    <div class="card"><div class="metric-label">Canje cable → MEP</div><div class="metric-value yellow" id="canjeCD">—</div><div class="metric-foot">AL30D / AL30C − 1 · resultado de la operación</div></div>
   </div>
 
   <div class="section-title"><h3 id="histTitle">Evolución</h3><small>MEP, CCL y canje calculados con AL30, sin comisión</small></div>
@@ -47,14 +47,15 @@
     <div class="card fx-chart"><h3>CCL</h3><canvas id="cclChart"></canvas><div id="cclChartEmpty" class="empty small hide">Todavía no hay datos para este período.</div></div>
     <div class="card fx-chart"><h3>Canje (%)</h3><canvas id="canjeChart"></canvas><div id="canjeChartEmpty" class="empty small hide">Todavía no hay datos para este período.</div></div>
   </div>
-  <div class="fee-note">El historial se guarda cada minuto en horario de mercado (10:30 a 17:00, días hábiles) y, pasado el año, se conserva una observación por día. Los gráficos no incluyen comisión; la comisión que elijas arriba afecta las tarjetas y las tablas.</div>
-
-  <div class="section-title"><h3>Referencias oficiales</h3><small>Fuente BCRA · última fecha publicada</small></div>
-  <div class="grid metrics" id="officialCards" style="grid-template-columns:repeat(2,minmax(0,1fr))"><div class="card"><div class="empty small">Sin datos todavía.</div></div></div>
+  <div class="section-title"><h3>Dólar oficial y brecha</h3><small>Fuente BCRA · última fecha publicada</small></div>
+  <div class="grid metrics" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+    <div class="card"><div class="metric-label">Dólar oficial mayorista (A3500)</div><div class="metric-value" id="a3500Value">—</div><div class="metric-foot" id="a3500Foot">Sin datos todavía</div></div>
+    <div class="card"><div class="metric-label">Brecha MEP vs. A3500</div><div class="metric-value yellow" id="brechaMep">—</div><div class="metric-foot" id="brechaMepFoot">MEP / A3500 − 1</div></div>
+    <div class="card"><div class="metric-label">Brecha CCL vs. A3500</div><div class="metric-value yellow" id="brechaCcl">—</div><div class="metric-foot" id="brechaCclFoot">CCL / A3500 − 1</div></div>
+  </div>
 
   <div class="section-title"><h3>Detalle AL30</h3><small>Último operado</small></div>
   <div class="table-card"><div class="table-scroll"><table id="tblFx"></table></div></div>
-  <div class="note"><strong>Lectura del canje:</strong> el canje MEP → cable mide cuánto más barato está AL30C respecto de AL30D; el canje cable → MEP es la cuenta inversa. Ambos usan el último precio operado y la comisión por lado elegida arriba.</div>
   <div class="disclaimer"></div>
 </section>
 
@@ -64,7 +65,6 @@
   <div class="toolbar"><input class="search" id="sovSearch" placeholder="Filtrar bono…"><span class="pill">Tocá una columna para ordenar</span></div>
   <div class="section-title"><h3>Especies y ratios implícitos</h3><small>Precios por 100 nominales</small></div>
   <div class="table-card"><div class="table-scroll"><table id="tblSov"></table></div></div>
-  <div class="note">* <strong>Canje salir:</strong> 1 − cable / MEP (con la comisión elegida). <strong>Ratio de ley:</strong> precio MEP del bono de ley local ÷ precio MEP de su par de ley extranjera (por ejemplo AL30D / GD30D). Es una comparación de precios, no una garantía de arbitraje: hay que considerar liquidez, comisiones, legislación y flujos.</div>
   <div class="disclaimer"></div>
 </section>
 
@@ -80,17 +80,18 @@
 
   <div class="section-title"><h3>LECERs y bonos CER</h3><small id="cerInfo">—</small></div>
   <div class="table-card"><div class="table-scroll"><table id="tblCer"></table></div></div>
+  <div class="footnote hide" id="cerStar">* La TNA proyectada usa inflación extrapolada: se repite el último mes cargado del REM.</div>
   <div class="section-title"><h3>Curva CER</h3><small>Duration vs. TIR real · tendencia logarítmica</small></div>
   <div class="card chart-card"><canvas id="cerChart"></canvas><div id="cerChartEmpty" class="empty hide">Todavía no hay suficientes datos para graficar la curva CER.</div></div>
   <div class="legend-note" id="cerFit"></div>
 
   <div class="section-title"><h3>Duales</h3><small>Valuados a CER</small></div>
   <div class="table-card"><div class="table-scroll"><table id="tblDual"></table></div></div>
+  <div class="footnote hide" id="dualStar">* La TNA proyectada usa inflación extrapolada: se repite el último mes cargado del REM.</div>
   <div class="section-title"><h3>Curva de duales</h3><small>Duration vs. TIR real · tendencia logarítmica</small></div>
   <div class="card chart-card"><canvas id="dualChart"></canvas><div id="dualChartEmpty" class="empty hide">Todavía no hay suficientes datos para graficar la curva de duales.</div></div>
   <div class="legend-note" id="dualFit"></div>
 
-  <div class="note"><strong>Cómo se calcula (CER y duales).</strong> <strong>Finish (CER hoy)</strong> = CER de 10 días hábiles antes de la liquidación ÷ CER de emisión, por 100 nominales. <strong>TIR real</strong> = (finish ÷ precio)<sup>365/días</sup> − 1, es decir, el rendimiento por encima de la inflación ya devengada (igual que el XIRR de la hoja de Excel). <strong>TNA proy.</strong> usa un finish proyectado: CER de 10 días hábiles antes del vencimiento, estimado con la inflación mensual del REM, y se calcula como las LECAP (rendimiento × 360 / días) para poder compararlas. Con <strong>*</strong> se marcan los casos en que la proyección usó inflación extrapolada (se repite el último mes cargado). <strong>Duration</strong> = años al vencimiento ÷ (1 + TIR real). Los TX no tienen TIR por ahora.</div>
   <div class="disclaimer"></div>
 </section>
 
@@ -102,10 +103,23 @@
   <div class="section-title"><h3>CEDEARs · cotización MEP y cable</h3><small>Precios en pesos y tipo de cambio implícito contra ambas especies</small></div>
   <div class="toolbar"><input class="search" id="cedearSearch" placeholder="Filtrar CEDEAR…"><span class="pill">Canje implícito = MEP / cable − 1</span></div>
   <div class="table-card"><div class="table-scroll"><table id="tblCedears"></table></div></div>
-  <div class="note">En CEDEARs, el MEP y el cable implícitos se calculan contra la especie base en pesos. Si una especie no cotiza, la celda queda en —.</div>
   <div class="disclaimer"></div>
 </section>
 </main>
+
+<details class="method" id="metodologia">
+  <summary>ⓘ Metodología y definiciones</summary>
+  <div class="method-body">
+    <p><strong>Datos.</strong> Precios de último operado por 100 nominales (data912), actualizados cada minuto en horario de mercado (10:30 a 17:00, días hábiles). Fuera de ese horario se muestra el último dato disponible. La referencia oficial es la Com. A 3500 del BCRA.</p>
+    <p><strong>Dólares.</strong> MEP = AL30 / AL30D. CCL = AL30 / AL30C. Canje MEP → cable = AL30C / AL30D − 1 (comprar en MEP y vender en cable). Canje cable → MEP = AL30D / AL30C − 1. Con comisión, se compra con +comisión y se vende con −comisión sobre cada precio. Brecha = MEP (o CCL) / A3500 − 1, sin comisión. Los gráficos tampoco incluyen comisión.</p>
+    <p><strong>Historial.</strong> Se guarda una observación por minuto en horario de mercado y, pasado un año, una por día. Los datos diarios anteriores a octubre de 2026 se reconstruyeron con los cierres diarios de AL30, AL30D y AL30C.</p>
+    <p><strong>Soberanos.</strong> MEP / CCL implícito = precio en pesos ÷ precio en dólares de la especie. Canje salir = AL30C / AL30D − 1 calculado con cada bono. Ratio de ley = precio MEP del bono de ley local ÷ precio MEP de su par de ley extranjera (por ejemplo AL30D / GD30D).</p>
+    <p><strong>LECAP y BONCAP.</strong> Rendimiento = finish ÷ precio − 1. TNA = rendimiento × 360 ÷ días. TEM = TNA × 30 ÷ 365. Los días se cuentan desde la liquidación T+1 hábil. El finish es lo que paga el título al vencimiento por 100 nominales.</p>
+    <p><strong>CER y duales.</strong> Finish (CER hoy) = CER de 10 días hábiles antes de la liquidación ÷ CER de emisión, por 100 nominales. TIR real = (finish ÷ precio)<sup>365/días</sup> − 1. Duration = años al vencimiento ÷ (1 + TIR real). TNA proyectada: usa un finish con el CER de 10 días hábiles antes del vencimiento, estimado con la inflación mensual del REM, y se calcula como las LECAP. El asterisco (*) indica que usó inflación extrapolada.</p>
+    <p><strong>Curvas.</strong> Línea de tendencia logarítmica: y = a + b · ln(x), ajustada por mínimos cuadrados sobre los instrumentos mostrados (hacen falta 3 o más). El R² indica qué tan bien se ajusta.</p>
+    <p><strong>Equity.</strong> MEP implícito = precio en pesos ÷ precio en dólares MEP. En CEDEARs, el canje implícito = MEP ÷ cable − 1.</p>
+  </div>
+</details>
 
 <script src="js/config.js"></script>
 <script src="js/calc.js"></script>

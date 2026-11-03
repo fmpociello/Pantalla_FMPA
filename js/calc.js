@@ -59,13 +59,15 @@
     };
   }
 
-  // ---------- dólar y canjes (fórmulas de la hoja "Pantalla" del Excel; comm = comisión por lado, 0.001 = 0,1 %) ----------
+  // ---------- dólar y canjes (comm = comisión por lado, 0.001 = 0,1 %) ----------
   function mepOffer(al30, d, comm) { al30 = pos(al30); d = pos(d); return al30 && d ? (al30 * (1 + comm)) / (d * (1 - comm)) : null; }
   function cclOffer(al30, c, comm) { return mepOffer(al30, c, comm); }
-  // "offer - mep a cable"
-  function canjeMepCcl(d, c, comm) { d = pos(d); c = pos(c); return d && c ? 1 - (c * (1 - comm)) / (d * (1 + comm)) : null; }
-  // "bid - cable a mep"
+  // Canje MEP → cable: resultado de comprar AL30 en MEP (se paga D) y venderlo en cable (se cobra C) = C/D − 1
+  function canjeMepCcl(d, c, comm) { d = pos(d); c = pos(c); return d && c ? (c * (1 - comm)) / (d * (1 + comm)) - 1 : null; }
+  // Canje cable → MEP: comprar en cable y vender en MEP = D/C − 1
   function canjeCclMep(d, c, comm) { d = pos(d); c = pos(c); return d && c ? (d * (1 - comm)) / (c * (1 + comm)) - 1 : null; }
+  // Brecha = dólar implícito / A3500 − 1
+  function brecha(dolar, oficial) { dolar = pos(dolar); oficial = pos(oficial); return dolar && oficial ? dolar / oficial - 1 : null; }
   function ratio(a, b) { a = pos(a); b = pos(b); return a && b ? a / b : null; }
 
   // ---------- tasa fija (hoja "CER - finish" del Excel) ----------
@@ -202,7 +204,7 @@
     num: num, pos: pos, arDate: arDate, arMinutes: arMinutes, addDays: addDays, dayOfWeek: dayOfWeek, daysBetween: daysBetween,
     isBusinessDay: isBusinessDay, nextBusinessDay: nextBusinessDay, isMarketOpen: isMarketOpen, dayStartIso: dayStartIso,
     arDateOfTs: arDateOfTs, periodStart: periodStart, lastSession: lastSession, symbolsFor: symbolsFor,
-    mepOffer: mepOffer, cclOffer: cclOffer, canjeMepCcl: canjeMepCcl, canjeCclMep: canjeCclMep, ratio: ratio,
+    mepOffer: mepOffer, cclOffer: cclOffer, brecha: brecha, canjeMepCcl: canjeMepCcl, canjeCclMep: canjeCclMep, ratio: ratio,
     tasaFija: tasaFija, workdayAdd: workdayAdd, daysInMonth: daysInMonth, buildCER: buildCER, cerBond: cerBond,
     logFit: logFit, evalLog: evalLog, trendLine: trendLine, compare: compare, fmt: fmt, money: money, pctPoints: pctPoints, pctFrac: pctFrac, dateEs: dateEs
   };

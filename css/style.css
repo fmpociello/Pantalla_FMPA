@@ -107,3 +107,13 @@ th .arrow{font-size:9px;margin-left:4px;color:var(--blue)}
 .legend-note{color:var(--muted);font-size:11px;margin:8px 0 0}
 .errbox{border:1px solid #5b2a2a;background:#2a1517;color:#fecaca;padding:10px 12px;border-radius:9px;margin:0 0 14px;font-size:12px}
 @media(max-width:1100px){.fx-charts.three{grid-template-columns:1fr}}
+
+.footnote{margin:8px 2px 0;color:#94a3b8;font-size:11px}
+.method{max-width:1500px;margin:14px auto 40px;padding:0 22px}
+.method summary{cursor:pointer;color:#94a3b8;font-size:12px;padding:8px 0;user-select:none;list-style:none}
+.method summary::-webkit-details-marker{display:none}
+.method summary:hover{color:#dbeafe}
+.method[open] summary{color:#dbeafe}
+.method-body{border:1px solid var(--border);border-radius:9px;background:#0e1520;padding:6px 16px 4px;color:#a9b6c8;font-size:12px;line-height:1.6}
+.method-body p{margin:10px 0}
+.method-body strong{color:#dbeafe}

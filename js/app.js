@@ -185,12 +185,15 @@
       { k: 'v', label: 'Variación', html: function (r) { return vr(r.q.pct); }, val: function (r) { return r.q.pct; } }
     ], rows, function (x, y) { return x.o - y.o; });
 
-    var seen = {}, cards = [];
-    S.official.forEach(function (o) { if (!seen[o.codigo]) { seen[o.codigo] = 1; cards.push(o); } });
-    $('officialCards').innerHTML = cards.length ? cards.map(function (o) {
-      return '<div class="card"><div class="metric-label">' + esc(o.descripcion || o.codigo) + ' (' + esc(o.codigo) + ')</div><div class="metric-value">' + C.money(o.valor) +
-        '</div><div class="metric-foot">BCRA · fecha ' + C.dateEs(o.fecha) + '</div></div>';
-    }).join('') : '<div class="card"><div class="empty small">Sin datos todavía.</div></div>';
+    var ref = null;
+    S.official.forEach(function (o) { if (!ref && o.codigo === CFG.OFFICIAL_CODE) ref = o; });   // las filas vienen de la fecha más nueva a la más vieja
+    setText('a3500Value', ref ? C.money(ref.valor) : '—');
+    setText('a3500Foot', ref ? 'BCRA · Com. A 3500 · fecha ' + C.dateEs(ref.fecha) : 'Sin datos todavía');
+    var oficial = ref ? ref.valor : null;
+    setText('brechaMep', C.pctFrac(C.brecha(C.mepOffer(a.last, d.last, 0), oficial)));
+    setText('brechaCcl', C.pctFrac(C.brecha(C.cclOffer(a.last, c.last, 0), oficial)));
+    setText('brechaMepFoot', ref ? 'MEP en vivo vs. A3500 del ' + C.dateEs(ref.fecha) : 'MEP / A3500 − 1');
+    setText('brechaCclFoot', ref ? 'CCL en vivo vs. A3500 del ' + C.dateEs(ref.fecha) : 'CCL / A3500 − 1');
   }
 
   // ---------- pestaña: soberanos ----------
@@ -272,6 +275,9 @@
       { k: 'vol', label: 'Volumen', first: -1, html: function (r) { return C.fmt(r.q.vol, 0); }, val: function (r) { return r.q.vol; } }
     ];
     var cerR = cerRows(['cer', 'tx']), dualR = cerRows(['dual']);
+    var hasStar = function (rows) { return rows.some(function (r) { return r.o && r.o.extrap && r.o.tnaProj !== null; }); };
+    $('cerStar').classList.toggle('hide', !hasStar(cerR));
+    $('dualStar').classList.toggle('hide', !hasStar(dualR));
     drawTable('tblCer', cerCols, cerR, byVenc);
     drawTable('tblDual', cerCols, dualR, byVenc);
     var pts = function (rows) { return rows.filter(function (r) { return g(r, 'tir') !== null && g(r, 'dur') > 0; }).map(function (r) { return { x: g(r, 'dur'), y: g(r, 'tir') * 100, t: r.tk }; }); };
