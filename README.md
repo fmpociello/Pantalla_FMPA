@@ -1,4 +1,4 @@
-# Pantalla - FMPA · web (v8.1)
+# Pantalla - FMPA · web (v9)
 
 Sitio estático: no necesita instalar nada ni compilar. Lee todo de Supabase con la clave pública (solo lectura).
 

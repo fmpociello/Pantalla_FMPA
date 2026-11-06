@@ -117,3 +117,9 @@ th .arrow{font-size:9px;margin-left:4px;color:var(--blue)}
 .method-body{border:1px solid var(--border);border-radius:9px;background:#0e1520;padding:6px 16px 4px;color:#a9b6c8;font-size:12px;line-height:1.6}
 .method-body p{margin:10px 0}
 .method-body strong{color:#dbeafe}
+
+.reset-bar{display:flex;justify-content:flex-end;padding:6px 10px 0}
+.reset-bar:empty{display:none}
+.reset-order{border:1px solid var(--border);background:#101722;color:var(--blue);border-radius:7px;padding:3px 10px;font-size:11px}
+.reset-order:hover{background:#1d2a40}
+.symbol[title]{cursor:help;border-bottom:1px dotted #475569}
