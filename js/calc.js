@@ -66,6 +66,11 @@
   function canjeMepCcl(d, c, comm) { d = pos(d); c = pos(c); return d && c ? (c * (1 - comm)) / (d * (1 + comm)) - 1 : null; }
   // Canje cable → MEP: comprar en cable y vender en MEP = D/C − 1
   function canjeCclMep(d, c, comm) { d = pos(d); c = pos(c); return d && c ? (d * (1 - comm)) / (c * (1 + comm)) - 1 : null; }
+  // YTD en USD (MEP): (precio en pesos hoy / MEP hoy) / (cierre base en pesos / MEP de la base) − 1
+  function ytdUsd(pHoy, mepHoy, cierreBase, mepBase) {
+    pHoy = pos(pHoy); mepHoy = pos(mepHoy); cierreBase = pos(cierreBase); mepBase = pos(mepBase);
+    return pHoy && mepHoy && cierreBase && mepBase ? (pHoy / mepHoy) / (cierreBase / mepBase) - 1 : null;
+  }
   // Brecha = dólar implícito / A3500 − 1
   function brecha(dolar, oficial) { dolar = pos(dolar); oficial = pos(oficial); return dolar && oficial ? dolar / oficial - 1 : null; }
   function ratio(a, b) { a = pos(a); b = pos(b); return a && b ? a / b : null; }
@@ -204,7 +209,7 @@
     num: num, pos: pos, arDate: arDate, arMinutes: arMinutes, addDays: addDays, dayOfWeek: dayOfWeek, daysBetween: daysBetween,
     isBusinessDay: isBusinessDay, nextBusinessDay: nextBusinessDay, isMarketOpen: isMarketOpen, dayStartIso: dayStartIso,
     arDateOfTs: arDateOfTs, periodStart: periodStart, lastSession: lastSession, symbolsFor: symbolsFor,
-    mepOffer: mepOffer, cclOffer: cclOffer, brecha: brecha, canjeMepCcl: canjeMepCcl, canjeCclMep: canjeCclMep, ratio: ratio,
+    mepOffer: mepOffer, cclOffer: cclOffer, brecha: brecha, ytdUsd: ytdUsd, canjeMepCcl: canjeMepCcl, canjeCclMep: canjeCclMep, ratio: ratio,
     tasaFija: tasaFija, workdayAdd: workdayAdd, daysInMonth: daysInMonth, buildCER: buildCER, cerBond: cerBond,
     logFit: logFit, evalLog: evalLog, trendLine: trendLine, compare: compare, fmt: fmt, money: money, pctPoints: pctPoints, pctFrac: pctFrac, dateEs: dateEs
   };

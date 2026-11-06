@@ -97,7 +97,7 @@
 
 <!-- ================= EQUITY ================= -->
 <section id="page-equity" class="hide">
-  <div class="page-head"><div><h2>Equity</h2><div class="sub">Acciones locales y CEDEARs · último operado</div></div><div class="updated" id="equityUpdated">—</div></div>
+  <div class="page-head"><div><h2>Equity</h2><div class="sub" id="equitySub">Acciones locales y CEDEARs · último operado</div></div><div class="updated" id="equityUpdated">—</div></div>
   <div class="section-title"><h3>Acciones locales</h3><small>Pesos, MEP y tipo de cambio implícito</small></div>
   <div class="table-card"><div class="table-scroll"><table id="tblStocks"></table></div></div>
   <div class="section-title"><h3>CEDEARs · cotización MEP y cable</h3><small>Precios en pesos y tipo de cambio implícito contra ambas especies</small></div>
@@ -119,7 +119,7 @@
     <p><strong>LECAP y BONCAP.</strong> Rendimiento = finish ÷ precio − 1. TNA = rendimiento × 360 ÷ días. TEM = TNA × 30 ÷ 365. Los días se cuentan desde la liquidación T+1 hábil. El finish es lo que paga el título al vencimiento por 100 nominales.</p>
     <p><strong>CER y duales.</strong> Finish (CER hoy) = CER de 10 días hábiles antes de la liquidación ÷ CER de emisión, por 100 nominales. TIR real = (finish ÷ precio)<sup>365/días</sup> − 1. Duration = años al vencimiento ÷ (1 + TIR real). TNA proyectada: usa un finish con el CER de 10 días hábiles antes del vencimiento, estimado con la inflación mensual del REM, y se calcula como las LECAP. El asterisco (*) indica que usó inflación extrapolada.</p>
     <p><strong>Curvas.</strong> Línea de tendencia logarítmica: y = a + b · ln(x), ajustada por mínimos cuadrados sobre los instrumentos mostrados (hacen falta 3 o más). El R² indica qué tan bien se ajusta.</p>
-    <p><strong>Equity.</strong> MEP implícito = precio en pesos ÷ precio en dólares MEP. En CEDEARs, el canje implícito = MEP ÷ cable − 1. La tabla de sectores muestra los CEDEARs de los 11 ETF sectoriales del S&amp;P 500 (SPDR). Las variaciones son las de cada especie (pesos, MEP y cable) y dependen de la liquidez de cada una.</p>
+    <p><strong>Equity.</strong> MEP implícito = precio en pesos ÷ precio en dólares MEP. En CEDEARs, el canje implícito = MEP ÷ cable − 1. <strong>YTD USD</strong> = (precio en pesos hoy ÷ MEP hoy) ÷ (cierre en pesos del último día hábil del año anterior ÷ MEP de ese día) − 1. Es rendimiento de precio, sin dividendos, y los históricos pueden no estar ajustados por splits o cambios de ratio. Si un ticker no cotizaba en esa fecha, queda en —. La tabla de sectores muestra los CEDEARs de los 11 ETF sectoriales del S&amp;P 500 (SPDR). Las variaciones son las de cada especie (pesos, MEP y cable) y dependen de la liquidez de cada una.</p>
   </div>
 </details>
 

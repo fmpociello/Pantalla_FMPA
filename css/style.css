@@ -123,3 +123,5 @@ th .arrow{font-size:9px;margin-left:4px;color:var(--blue)}
 .reset-order{border:1px solid var(--border);background:#101722;color:var(--blue);border-radius:7px;padding:3px 10px;font-size:11px}
 .reset-order:hover{background:#1d2a40}
 .symbol[title]{cursor:help;border-bottom:1px dotted #475569}
+
+td.desc{color:#a9b6c8;font-size:12px;white-space:nowrap}

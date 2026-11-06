@@ -13,7 +13,7 @@
   var S = {
     quotes: new Map(), inst: [], instBy: new Map(), hol: new Set(), official: [],
     comm: 0, period: 'hoy', sort: {}, charts: {}, hist: {}, hcur: null,
-    staticAt: 0, busy: false, errors: [], cerSeries: [], infl: [], cer: null
+    staticAt: 0, busy: false, errors: [], cerSeries: [], infl: [], cer: null, ytd: new Map()
   };
 
   // ---------- comisión (se recuerda en este navegador; por defecto 0 %) ----------
@@ -297,28 +297,38 @@
 
   // ---------- pestaña: equity ----------
   function renderEquity() {
+    var mepHoy = C.ratio(qv('AL30').last, qv('AL30D').last);                       // MEP puro de hoy (AL30 / AL30D)
+    var ytdOf = function (ticker, pHoy) { var y = S.ytd.get(ticker); return y ? C.ytdUsd(pHoy, mepHoy, y.cierre, y.mep_base) : null; };
+    var baseRef = null;
+    S.ytd.forEach(function (y) { if (!baseRef && y.fecha_ref) baseRef = y.fecha_ref; });
+    setText('equitySub', 'Acciones locales y CEDEARs · último operado' + (baseRef ? ' · YTD en USD vs. cierre del ' + C.dateEs(baseRef) : ''));
+    var descCol = { k: 'desc', label: 'Descripción', cls: 'desc', html: function (r) { return esc(r.desc || '—'); }, val: function (r) { return r.desc; } };
+    var ytdCol = { k: 'ytd', label: 'YTD USD', first: -1, html: function (r) { return r.ytd === null ? '<span class="muted">—</span>' : vr(r.ytd * 100); }, val: function (r) { return r.ytd; } };
+
     var stocks = S.inst.filter(function (i) { return i.tipo === 'accion'; }).map(function (i) {
       var s = C.symbolsFor(i), p = qv(s.p), d = qv(s.d);
-      return { orden: i.orden, tk: i.ticker, desc: i.descripcion, p: p, d: d, mep: C.ratio(p.last, d.last) };
+      return { orden: i.orden, tk: i.ticker, desc: i.descripcion, p: p, d: d, mep: C.ratio(p.last, d.last), ytd: ytdOf(i.ticker, p.last) };
     });
     drawTable('tblStocks', [
-      { k: 'tk', label: 'Acción', html: tkd, val: function (r) { return r.tk; } },
+      { k: 'tk', label: 'Acción', html: tk, val: function (r) { return r.tk; } },
+      descCol,
       { k: 'p', label: 'Pesos', first: -1, html: function (r) { return blue(C.fmt(r.p.last, 2)); }, val: function (r) { return r.p.last; } },
       { k: 'pv', label: 'Var. %', first: -1, html: function (r) { return vr(r.p.pct); }, val: function (r) { return r.p.pct; } },
       { k: 'd', label: 'MEP', first: -1, html: function (r) { return blue(C.fmt(r.d.last, 4)); }, val: function (r) { return r.d.last; } },
       { k: 'dv', label: 'Var. %', first: -1, html: function (r) { return vr(r.d.pct); }, val: function (r) { return r.d.pct; } },
+      ytdCol,
       { k: 'mep', label: 'MEP implícito', first: -1, html: function (r) { return blue(r.mep === null ? '—' : C.money(r.mep)); }, val: function (r) { return r.mep; } }
     ], stocks, byOrden);
 
     // CEDEARs: la lista general (todos menos los 11 ETF sectoriales) y la lista de sectores
     var cedRow = function (i) {
       var s = C.symbolsFor(i), p = qv(s.p), d = qv(s.d), c = qv(s.c), dc = C.ratio(d.last, c.last);
-      return { orden: i.orden, tk: i.ticker, desc: i.descripcion, sector: i.sector, p: p, d: d, c: c, mep: C.ratio(p.last, d.last), ccl: C.ratio(p.last, c.last), canje: dc === null ? null : dc - 1 };
+      return { orden: i.orden, tk: i.ticker, desc: i.descripcion, sector: i.sector, p: p, d: d, c: c, mep: C.ratio(p.last, d.last), ccl: C.ratio(p.last, c.last), canje: dc === null ? null : dc - 1, ytd: ytdOf(i.ticker, p.last) };
     };
-    var cedCols = function (label, withSector) {
+    var cedCols = function (label, kind) {      // kind: 'general' (con Descripción) o 'sector' (con Sector y cartelito)
       var px = function (k, lab, get, dec) { return { k: k, label: lab, first: -1, html: function (r) { return blue(C.fmt(get(r), dec)); }, val: get }; };
-      var cols = [{ k: 'tk', label: label, html: tkd, val: function (r) { return r.tk; } }];
-      if (withSector) cols.push({ k: 'sec', label: 'Sector', html: function (r) { return esc(r.sector || '—'); }, val: function (r) { return r.sector; } });
+      var cols = [{ k: 'tk', label: label, html: kind === 'sector' ? tkd : tk, val: function (r) { return r.tk; } }];
+      cols.push(kind === 'sector' ? { k: 'sec', label: 'Sector', html: function (r) { return esc(r.sector || '—'); }, val: function (r) { return r.sector; } } : descCol);
       return cols.concat([
         px('p', 'Pesos', function (r) { return r.p.last; }, 2),
         { k: 'pv', label: 'Var. %', first: -1, html: function (r) { return vr(r.p.pct); }, val: function (r) { return r.p.pct; } },
@@ -326,6 +336,7 @@
         { k: 'dv', label: 'Var. %', first: -1, html: function (r) { return vr(r.d.pct); }, val: function (r) { return r.d.pct; } },
         px('c', 'Cable', function (r) { return r.c.last; }, 4),
         { k: 'cv', label: 'Var. %', first: -1, html: function (r) { return vr(r.c.pct); }, val: function (r) { return r.c.pct; } },
+        ytdCol,
         { k: 'mep', label: 'MEP implícito', first: -1, html: function (r) { return blue(r.mep === null ? '—' : C.money(r.mep)); }, val: function (r) { return r.mep; } },
         { k: 'ccl', label: 'CCL implícito', first: -1, html: function (r) { return blue(r.ccl === null ? '—' : C.money(r.ccl)); }, val: function (r) { return r.ccl; } },
         { k: 'canje', label: 'Canje implícito', first: -1, html: function (r) { return yellow(C.pctFrac(r.canje)); }, val: function (r) { return r.canje; } }
@@ -333,9 +344,9 @@
     };
     var q = ($('cedearSearch').value || '').toUpperCase();
     var general = S.inst.filter(function (i) { return i.tipo === 'cedear' && i.grupo !== 'sector' && i.ticker.toUpperCase().indexOf(q) >= 0; }).map(cedRow);
-    drawTable('tblCedears', cedCols('CEDEAR', false), general, byOrden);
+    drawTable('tblCedears', cedCols('CEDEAR', 'general'), general, byOrden);
     var sectores = S.inst.filter(function (i) { return i.tipo === 'cedear' && i.grupo === 'sector'; }).map(cedRow);
-    drawTable('tblSectors', cedCols('ETF sectorial', true), sectores, byOrden);
+    drawTable('tblSectors', cedCols('ETF sectorial', 'sector'), sectores, byOrden);
   }
 
   // ---------- estado de los datos ----------
@@ -359,11 +370,13 @@
       API.get('instruments', { select: '*', activo: 'eq.true', order: 'orden.asc' }),
       API.getAll('holidays', { select: 'fecha' }),
       API.get('cer_series', { select: 'fecha,valor', tipo: 'eq.oficial', order: 'fecha.desc', limit: '200' }),
-      API.getAll('inflation_projection', { select: 'mes,ipc_mensual,fuente', order: 'mes.asc' })
+      API.getAll('inflation_projection', { select: 'mes,ipc_mensual,fuente', order: 'mes.asc' }),
+      API.getAll('ytd_base', { select: 'ticker,cierre,mep_base,fecha_ref', anio: 'eq.' + C.arDate(new Date()).slice(0, 4) })
     ]);
     S.inst = r[0]; S.instBy = new Map(S.inst.map(function (i) { return [String(i.ticker).toUpperCase(), i]; }));
     S.hol = new Set(r[1].map(function (h) { return h.fecha; }));
     S.cerSeries = r[2]; S.infl = r[3]; S.cer = C.buildCER(S.cerSeries, S.infl);
+    S.ytd = new Map(r[4].map(function (y) { return [String(y.ticker), y]; }));
     S.staticAt = Date.now();
   }
 
