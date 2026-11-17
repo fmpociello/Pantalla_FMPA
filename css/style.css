@@ -125,3 +125,8 @@ th .arrow{font-size:9px;margin-left:4px;color:var(--blue)}
 .symbol[title]{cursor:help;border-bottom:1px dotted #475569}
 
 td.desc{color:#a9b6c8;font-size:12px;white-space:nowrap}
+
+/* Equity: columnas de ancho fijo e iguales en las tres tablas; descripción / sector alineados a la izquierda */
+table.fixed{table-layout:fixed;width:auto}
+th.left,td.left{text-align:left}
+td.desc{overflow:hidden;text-overflow:ellipsis}

@@ -43,12 +43,15 @@
     var st = S.sort[id], sorted = rows.slice();
     var col = st && st.k ? cols.filter(function (c) { return c.k === st.k; })[0] : null;
     if (col) sorted.sort(function (a, b) { return C.compare(col.val(a), col.val(b), st.dir); }); else sorted.sort(defCmp);
-    var head = '<thead><tr>' + cols.map(function (c) {
+    var fixed = cols.every(function (c) { return c.w; });          // tablas de ancho fijo (Equity): mismas columnas en las tres
+    var group = fixed ? '<colgroup>' + cols.map(function (c) { return '<col style="width:' + c.w + 'px">'; }).join('') + '</colgroup>' : '';
+    el.className = fixed ? 'fixed' : ''; el.style.width = fixed ? cols.reduce(function (a, c) { return a + c.w; }, 0) + 'px' : '';
+    var head = group + '<thead><tr>' + cols.map(function (c) {
       var arrow = col && col.k === c.k ? '<span class="arrow">' + (st.dir > 0 ? '▲' : '▼') + '</span>' : '';
-      return '<th class="sortable" data-t="' + id + '" data-k="' + c.k + '" data-d="' + (c.first || 1) + '">' + c.label + arrow + '</th>';
+      return '<th class="sortable' + (c.left ? ' left' : '') + '" data-t="' + id + '" data-k="' + c.k + '" data-d="' + (c.first || 1) + '">' + c.label + arrow + '</th>';
     }).join('') + '</tr></thead>';
     var body = sorted.length ? sorted.map(function (r) {
-      return '<tr>' + cols.map(function (c) { return '<td' + (c.cls ? ' class="' + c.cls + '"' : '') + '>' + c.html(r) + '</td>'; }).join('') + '</tr>';
+      return '<tr>' + cols.map(function (c) { var k = (c.cls || '') + (c.left ? ' left' : ''); return '<td' + (k ? ' class="' + k.trim() + '"' : '') + (c.left ? ' title="' + String(c.val(r) == null ? '' : c.val(r)).replace(/"/g, '&quot;') + '"' : '') + '>' + c.html(r) + '</td>'; }).join('') + '</tr>';
     }).join('') : '<tr><td colspan="' + cols.length + '" class="empty">Sin datos.</td></tr>';
     el.innerHTML = head + '<tbody>' + body + '</tbody>';
     var card = el.closest ? el.closest('.table-card') : null;
@@ -302,22 +305,23 @@
     var baseRef = null;
     S.ytd.forEach(function (y) { if (!baseRef && y.fecha_ref) baseRef = y.fecha_ref; });
     setText('equitySub', 'Acciones locales y CEDEARs · último operado' + (baseRef ? ' · YTD en USD vs. cierre del ' + C.dateEs(baseRef) : ''));
-    var descCol = { k: 'desc', label: 'Descripción', cls: 'desc', html: function (r) { return esc(r.desc || '—'); }, val: function (r) { return r.desc; } };
-    var ytdCol = { k: 'ytd', label: 'YTD USD', first: -1, html: function (r) { return r.ytd === null ? '<span class="muted">—</span>' : vr(r.ytd * 100); }, val: function (r) { return r.ytd; } };
+    var EW = { tk: 90, desc: 200, num: 100, vr: 80, ytd: 90, imp: 110, canje: 120 };   // anchos de las columnas de Equity (iguales en las tres tablas)
+    var descCol = { k: 'desc', label: 'Descripción', cls: 'desc', left: true, w: EW.desc, html: function (r) { return esc(r.desc || '—'); }, val: function (r) { return r.desc; } };
+    var ytdCol = { k: 'ytd', label: 'YTD USD', first: -1, w: EW.ytd, html: function (r) { return r.ytd === null ? '<span class="muted">—</span>' : vr(r.ytd * 100); }, val: function (r) { return r.ytd; } };
 
     var stocks = S.inst.filter(function (i) { return i.tipo === 'accion'; }).map(function (i) {
       var s = C.symbolsFor(i), p = qv(s.p), d = qv(s.d);
       return { orden: i.orden, tk: i.ticker, desc: i.descripcion, p: p, d: d, mep: C.ratio(p.last, d.last), ytd: ytdOf(i.ticker, p.last) };
     });
     drawTable('tblStocks', [
-      { k: 'tk', label: 'Acción', html: tk, val: function (r) { return r.tk; } },
+      { k: 'tk', label: 'Acción', w: EW.tk, html: tk, val: function (r) { return r.tk; } },
       descCol,
-      { k: 'p', label: 'Pesos', first: -1, html: function (r) { return blue(C.fmt(r.p.last, 2)); }, val: function (r) { return r.p.last; } },
-      { k: 'pv', label: 'Var. %', first: -1, html: function (r) { return vr(r.p.pct); }, val: function (r) { return r.p.pct; } },
-      { k: 'd', label: 'MEP', first: -1, html: function (r) { return blue(C.fmt(r.d.last, 4)); }, val: function (r) { return r.d.last; } },
-      { k: 'dv', label: 'Var. %', first: -1, html: function (r) { return vr(r.d.pct); }, val: function (r) { return r.d.pct; } },
+      { k: 'p', label: 'Pesos', first: -1, w: EW.num, html: function (r) { return blue(C.fmt(r.p.last, 2)); }, val: function (r) { return r.p.last; } },
+      { k: 'pv', label: 'Var. %', first: -1, w: EW.vr, html: function (r) { return vr(r.p.pct); }, val: function (r) { return r.p.pct; } },
+      { k: 'd', label: 'MEP', first: -1, w: EW.num, html: function (r) { return blue(C.fmt(r.d.last, 4)); }, val: function (r) { return r.d.last; } },
+      { k: 'dv', label: 'Var. %', first: -1, w: EW.vr, html: function (r) { return vr(r.d.pct); }, val: function (r) { return r.d.pct; } },
       ytdCol,
-      { k: 'mep', label: 'MEP implícito', first: -1, html: function (r) { return blue(r.mep === null ? '—' : C.money(r.mep)); }, val: function (r) { return r.mep; } }
+      { k: 'mep', label: 'MEP implícito', first: -1, w: EW.imp, html: function (r) { return blue(r.mep === null ? '—' : C.money(r.mep)); }, val: function (r) { return r.mep; } }
     ], stocks, byOrden);
 
     // CEDEARs: la lista general (todos menos los 11 ETF sectoriales) y la lista de sectores
@@ -326,20 +330,20 @@
       return { orden: i.orden, tk: i.ticker, desc: i.descripcion, sector: i.sector, p: p, d: d, c: c, mep: C.ratio(p.last, d.last), ccl: C.ratio(p.last, c.last), canje: dc === null ? null : dc - 1, ytd: ytdOf(i.ticker, p.last) };
     };
     var cedCols = function (label, kind) {      // kind: 'general' (con Descripción) o 'sector' (con Sector y cartelito)
-      var px = function (k, lab, get, dec) { return { k: k, label: lab, first: -1, html: function (r) { return blue(C.fmt(get(r), dec)); }, val: get }; };
-      var cols = [{ k: 'tk', label: label, html: kind === 'sector' ? tkd : tk, val: function (r) { return r.tk; } }];
-      cols.push(kind === 'sector' ? { k: 'sec', label: 'Sector', html: function (r) { return esc(r.sector || '—'); }, val: function (r) { return r.sector; } } : descCol);
+      var px = function (k, lab, get, dec) { return { k: k, label: lab, first: -1, w: EW.num, html: function (r) { return blue(C.fmt(get(r), dec)); }, val: get }; };
+      var cols = [{ k: 'tk', label: label, w: EW.tk, html: tk, val: function (r) { return r.tk; } }];
+      cols.push(kind === 'sector' ? { k: 'sec', label: 'Sector', left: true, cls: 'desc', w: EW.desc, html: function (r) { return esc(r.sector || '—'); }, val: function (r) { return r.sector; } } : descCol);
       return cols.concat([
         px('p', 'Pesos', function (r) { return r.p.last; }, 2),
-        { k: 'pv', label: 'Var. %', first: -1, html: function (r) { return vr(r.p.pct); }, val: function (r) { return r.p.pct; } },
+        { k: 'pv', label: 'Var. %', first: -1, w: EW.vr, html: function (r) { return vr(r.p.pct); }, val: function (r) { return r.p.pct; } },
         px('d', 'MEP', function (r) { return r.d.last; }, 4),
-        { k: 'dv', label: 'Var. %', first: -1, html: function (r) { return vr(r.d.pct); }, val: function (r) { return r.d.pct; } },
+        { k: 'dv', label: 'Var. %', first: -1, w: EW.vr, html: function (r) { return vr(r.d.pct); }, val: function (r) { return r.d.pct; } },
         px('c', 'Cable', function (r) { return r.c.last; }, 4),
-        { k: 'cv', label: 'Var. %', first: -1, html: function (r) { return vr(r.c.pct); }, val: function (r) { return r.c.pct; } },
+        { k: 'cv', label: 'Var. %', first: -1, w: EW.vr, html: function (r) { return vr(r.c.pct); }, val: function (r) { return r.c.pct; } },
         ytdCol,
-        { k: 'mep', label: 'MEP implícito', first: -1, html: function (r) { return blue(r.mep === null ? '—' : C.money(r.mep)); }, val: function (r) { return r.mep; } },
-        { k: 'ccl', label: 'CCL implícito', first: -1, html: function (r) { return blue(r.ccl === null ? '—' : C.money(r.ccl)); }, val: function (r) { return r.ccl; } },
-        { k: 'canje', label: 'Canje implícito', first: -1, html: function (r) { return yellow(C.pctFrac(r.canje)); }, val: function (r) { return r.canje; } }
+        { k: 'mep', label: 'MEP implícito', first: -1, w: EW.imp, html: function (r) { return blue(r.mep === null ? '—' : C.money(r.mep)); }, val: function (r) { return r.mep; } },
+        { k: 'ccl', label: 'CCL implícito', first: -1, w: EW.imp, html: function (r) { return blue(r.ccl === null ? '—' : C.money(r.ccl)); }, val: function (r) { return r.ccl; } },
+        { k: 'canje', label: 'Canje implícito', first: -1, w: EW.canje, html: function (r) { return yellow(C.pctFrac(r.canje)); }, val: function (r) { return r.canje; } }
       ]);
     };
     var q = ($('cedearSearch').value || '').toUpperCase();
