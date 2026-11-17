@@ -44,8 +44,9 @@
     var col = st && st.k ? cols.filter(function (c) { return c.k === st.k; })[0] : null;
     if (col) sorted.sort(function (a, b) { return C.compare(col.val(a), col.val(b), st.dir); }); else sorted.sort(defCmp);
     var fixed = cols.every(function (c) { return c.w; });          // tablas de ancho fijo (Equity): mismas columnas en las tres
-    var group = fixed ? '<colgroup>' + cols.map(function (c) { return '<col style="width:' + c.w + 'px">'; }).join('') + '</colgroup>' : '';
-    el.className = fixed ? 'fixed' : ''; el.style.width = fixed ? cols.reduce(function (a, c) { return a + c.w; }, 0) + 'px' : '';
+    var total = fixed ? cols.reduce(function (a, c) { return a + c.w; }, 0) : 0;
+    var group = fixed ? '<colgroup>' + cols.map(function (c) { return '<col style="width:' + (c.w / total * 100).toFixed(3) + '%">'; }).join('') + '</colgroup>' : '';
+    el.className = fixed ? 'fixed' : ''; el.style.width = fixed ? '100%' : ''; el.style.minWidth = fixed ? total + 'px' : '';   // ocupa todo el ancho; en pantallas angostas, scroll horizontal
     var head = group + '<thead><tr>' + cols.map(function (c) {
       var arrow = col && col.k === c.k ? '<span class="arrow">' + (st.dir > 0 ? '▲' : '▼') + '</span>' : '';
       return '<th class="sortable' + (c.left ? ' left' : '') + '" data-t="' + id + '" data-k="' + c.k + '" data-d="' + (c.first || 1) + '">' + c.label + arrow + '</th>';
